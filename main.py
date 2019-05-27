@@ -1,3 +1,4 @@
+#coding:utf-8
 import random
 import time
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -19,7 +20,7 @@ from tqdm import tqdm
 # np.random.seed(config.seed)
 # torch.manual_seed(config.seed)
 # torch.cuda.manual_seed_all(config.seed)
-os.environ["CUDA_VISIBLE_DEVICES"] = config.gpus
+#os.environ["CUDA_VISIBLE_DEVICES"] = config.gpus
 warnings.filterwarnings('ignore')
 
 best_acc = 0  # best test accuracy
@@ -46,16 +47,17 @@ def main():
                               ]))
 
     train_dataloader = DataLoader(
-        train_dataset,batch_size=config.batch_size,shuffle=True,num_workers=config.num_worker,pin_memory=True)
+        train_dataset,batch_size=config.batch_size*len(config.gpus),shuffle=True,num_workers=config.num_worker,pin_memory=True)
     val_dataloader = DataLoader(
-        val_dataset,batch_size=config.batch_size,shuffle=False,num_workers=config.num_worker,pin_memory=True
+        val_dataset,batch_size=config.batch_size*len(config.gpus),shuffle=False,num_workers=config.num_worker,pin_memory=True
     )
 
     #   create model
     print("=====> Loading model..")
     model = resnet50(pretrained=True)
     model.fc = torch.nn.Linear(2048,config.num_classes+1)
-    model.cuda()
+    model = torch.nn.DataParallel(model, device_ids=config.gpus)
+    model.cuda(device=config.gpus[0])
 
     cudnn.benchmark = True
 
@@ -75,9 +77,9 @@ def main():
             checkpoint = torch.load(config.resume)
             config.start_epoch = checkpoint['epoch']
             best_acc = checkpoint['best_acc1']
-            if config.gpu is not None:
+            if config.gpus is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
-                best_acc = best_acc.to(config.gpu)
+                best_acc = best_acc.to(config.gpus[0])
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
@@ -134,8 +136,8 @@ def train(train_loader, model, criterion, optimizer):
         # one_hot to Long
         targets = np.argmax(targets,axis=1)
 
-        inputs = Variable(inputs).cuda()
-        targets = Variable(torch.from_numpy(np.array(targets)).long()).cuda()
+        inputs = Variable(inputs).cuda(device=config.gpus[0])
+        targets = Variable(torch.from_numpy(np.array(targets)).long()).cuda(device=config.gpus[0])
 
         # compute output
         outputs = model(inputs)
@@ -178,8 +180,8 @@ def validate(val_loader, model, criterion):
         # one_hot to Long
         targets = np.argmax(targets,axis=1)
 
-        inputs = Variable(inputs).cuda()
-        targets = Variable(torch.from_numpy(np.array(targets)).long()).cuda()
+        inputs = Variable(inputs).cuda(device=config.gpus[0])
+        targets = Variable(torch.from_numpy(np.array(targets)).long()).cuda(device=config.gpus[0])
 
         # compute output
         outputs = model(inputs)
