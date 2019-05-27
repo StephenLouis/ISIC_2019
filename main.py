@@ -54,7 +54,7 @@ def main():
     #   create model
     print("=====> Loading model..")
     model = resnet50(pretrained=True)
-    model.fc = torch.nn.Linear(2048,9)
+    model.fc = torch.nn.Linear(2048,config.num_classes+1)
     model.cuda()
 
     cudnn.benchmark = True

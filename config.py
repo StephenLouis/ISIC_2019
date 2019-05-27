@@ -23,7 +23,7 @@ class DefaultConfigs(object):
     batch_size = 64
     img_height = 300
     img_weight = 300
-    num_classes = 62
+    num_classes = 8
     seed = 888
     lr = 1e-4
     lr_decay = 1e-4
