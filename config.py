@@ -1,8 +1,9 @@
 class DefaultConfigs(object):
     #1.string parameters
-    # train_csv_path = r"/mnt/storage/lupeng/ISIC/test.csv"
-    # val_csv_path = r'/mnt/storage/lupeng/ISIC/train.csv'
+    # train_csv_path = r"/mnt/storage/lupeng/ISIC/train.csv"
+    # val_csv_path = r'/mnt/storage/lupeng/ISIC/test.csv'
     # image_path = r'/mnt/storage/lupeng/ISIC/ISIC_2019_Training_Input/'
+
     train_csv_path = r"/home/liangxiaoqing/downloads/ISIC_2019_Training_Input/train.csv"
     val_csv_path = r'/home/liangxiaoqing/downloads/ISIC_2019_Training_Input/test.csv'
     image_path = r'/home/liangxiaoqing/downloads/ISIC_2019_Training_Input'
@@ -11,14 +12,17 @@ class DefaultConfigs(object):
     checkpoint_save = './checkpoint.pth.tar'
     best_models = './best_model.pth.tar'
 
-    resume = r'./checkpoint.pth.tar'
+    resume = True
+    resume_path = r'./best_model.pth.tar'
 
-    gpus = [0,1,2,3]
+
+    gpus = [1,2,5]
 
     #2.numeric parameters
     gamma = 0.1
     momentum = 0.9
     num_worker = 4 * len(gpus)
+    start_epoch = 0
     epochs = 250
     batch_size = 64
     img_height = 300

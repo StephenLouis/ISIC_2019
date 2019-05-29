@@ -3,15 +3,10 @@ import torch
 import os
 from config import config
 
-def save_checkpoint(state, is_best,fold):
-    filename = config.weights + config.model_name + os.sep +str(fold) + os.sep + "_checkpoint.pth.tar"
+def save_checkpoint(state, is_best, filename=config.checkpoint_save):
     torch.save(state, filename)
     if is_best:
-        message = config.best_models + config.model_name+ os.sep +str(fold)  + os.sep + 'model_best.pth.tar'
-        print("Get Better top1 : %s saving weights to %s"%(state["best_precision1"],message))
-        with open("./logs/%s.txt"%config.model_name,"a") as f:
-            print("Get Better top1 : %s saving weights to %s"%(state["best_precision1"],message),file=f)
-        shutil.copyfile(filename, message)
+        shutil.copyfile(filename, config.best_models)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -30,26 +25,6 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-def adjust_learning_rate(optimizer, epoch):
-    """Sets the learning rate to the initial LR decayed by 10 every 3 epochs"""
-    lr = config.lr * (0.1 ** (epoch // 3))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
-
-def schedule(current_epoch, current_lrs, **logs):
-        lrs = [1e-3, 1e-4, 0.5e-4, 1e-5, 0.5e-5]
-        epochs = [0, 1, 6, 8, 12]
-        for lr, epoch in zip(lrs, epochs):
-            if current_epoch >= epoch:
-                current_lrs[5] = lr
-                if current_epoch >= 2:
-                    current_lrs[4] = lr * 1
-                    current_lrs[3] = lr * 1
-                    current_lrs[2] = lr * 1
-                    current_lrs[1] = lr * 1
-                    current_lrs[0] = lr * 0.1
-        return current_lrs
 
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -68,30 +43,27 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def get_learning_rate(optimizer):
-    lr=[]
-    for param_group in optimizer.param_groups:
-       lr +=[ param_group['lr'] ]
+# def time_to_str(t, mode='min'):
+#     if mode=='min':
+#         t  = int(t)/60
+#         hr = t//60
+#         min = t%60
+#         return '%2d hr %02d min'%(hr,min)
+#
+#     elif mode=='sec':
+#         t   = int(t)
+#         min = t//60
+#         sec = t%60
+#         return '%2d min %02d sec'%(min,sec)
+#
+#     else:
+#         raise NotImplementedError
 
-    #assert(len(lr)==1) #we support only one param_group
-    lr = lr[0]
-
-    return lr
-
-
-def time_to_str(t, mode='min'):
-    if mode=='min':
-        t  = int(t)/60
-        hr = t//60
-        min = t%60
-        return '%2d hr %02d min'%(hr,min)
-
-    elif mode=='sec':
-        t   = int(t)
-        min = t//60
-        sec = t%60
-        return '%2d min %02d sec'%(min,sec)
-
-
+def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_size):
+    if epoch < 8:
+        lr = 2e-4 + (config.lr-2e-4) * iteration / (epoch_size * 7)
     else:
-        raise NotImplementedError
+        lr = config.lr * (gamma ** (step_index))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    return lr

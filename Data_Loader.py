@@ -78,17 +78,5 @@ class ISICDataset(Dataset):
         return image,target
 
 
-# label = pd.read_csv(r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
-# print(label)
-
-# train_data = ISICDataset(csv_file=r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv",root_dir='/mnt/storage/lupeng/ISIC/ISIC_2019_Training_Input/')
-# train_loader = DataLoader(dataset=train_data,batch_size=32,shuffle=True)
-# for batch_x, batch_y in train_loader:
-#     print(batch_x)
-#     print(batch_x)
-
-
-# image = read_labels_csv(r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
-# print(image)
-
-# split_csv(file=r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
+if __name__ == '__main__':
+    split_csv(file=r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
