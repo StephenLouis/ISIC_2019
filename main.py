@@ -102,6 +102,8 @@ def main():
 
         # adjust_learning_rate
         #scheduler.step(val_loss)
+        if epoch >= 140:
+            Learning_rate = config.lr * 1.0 / 10;
 
         # save model
         is_best = val_acc > best_acc
