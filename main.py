@@ -55,10 +55,11 @@ def main():
     #   create model
     print("=====> Loading model..")
     
-    # model = make_model('se_resnext50_32x4d', num_classes=config.num_classes+1, pretrained=True)
+    model = make_model('se_resnext50_32x4d', num_classes=config.num_classes+1, pretrained=True)
 
-    model = resnet50(pretrained=True)
-    model.fc = torch.nn.Linear(2048,config.num_classes+1)
+    # model = resnet50(pretrained=True)
+    # model.fc = torch.nn.Linear(2048,config.num_classes+1)
+
     model = torch.nn.DataParallel(model, device_ids=config.gpus)
     model.cuda(device=config.gpus[0])
 
