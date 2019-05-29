@@ -18,14 +18,14 @@ class DefaultConfigs(object):
     #2.numeric parameters
     gamma = 0.1
     momentum = 0.9
-    num_worker = 8
-    epochs = 100
+    num_worker = 4 * len(gpus)
+    epochs = 250
     batch_size = 64
     img_height = 300
     img_weight = 300
     num_classes = 8
     seed = 888
-    lr = 1e-4 * len(gpus)
+    lr = 2e-4 * len(gpus)
     lr_decay = 1e-4
     weight_decay = 1e-4
 

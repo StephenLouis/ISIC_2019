@@ -13,6 +13,7 @@ from Data_Loader import *
 from utils.utils import *
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
+from cnn_finetune import make_model
 
 
 #1. set random.seed and cudnn performance
@@ -49,13 +50,16 @@ def main():
     train_dataloader = DataLoader(
         train_dataset,batch_size=config.batch_size*len(config.gpus),shuffle=True,num_workers=config.num_worker,pin_memory=True)
     val_dataloader = DataLoader(
-        val_dataset,batch_size=config.batch_size*len(config.gpus),shuffle=False,num_workers=config.num_worker,pin_memory=True
+        val_dataset,batch_size=config.batch_size,shuffle=False,num_workers=config.num_worker,pin_memory=True
     )
 
     #   create model
     print("=====> Loading model..")
-    model = resnet50(pretrained=True)
-    model.fc = torch.nn.Linear(2048,config.num_classes+1)
+    
+    model = make_model('se_resnext50_32x4d', num_classes=config.num_classes+1, pretrained=True)
+
+    #model = resnet50(pretrained=True)
+    #model.fc = torch.nn.Linear(2048,config.num_classes+1)
     model = torch.nn.DataParallel(model, device_ids=config.gpus)
     model.cuda(device=config.gpus[0])
 
@@ -76,7 +80,7 @@ def main():
             print("=> loading checkpoint '{}'".format(config.resume))
             checkpoint = torch.load(config.resume)
             config.start_epoch = checkpoint['epoch']
-            best_acc = checkpoint['best_acc1']
+            best_acc = checkpoint['best_acc']
             if config.gpus is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
                 best_acc = best_acc.to(config.gpus[0])
@@ -97,7 +101,7 @@ def main():
         val_loss, val_acc = validate(val_dataloader, model, criterion)
 
         # adjust_learning_rate
-        scheduler.step(val_loss)
+        #scheduler.step(val_loss)
 
         # save model
         is_best = val_acc > best_acc
