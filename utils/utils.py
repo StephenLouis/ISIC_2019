@@ -2,6 +2,7 @@ import shutil
 import torch
 import os
 from config import config
+import numpy as np
 
 def save_checkpoint(state, is_best, filename=config.checkpoint_save):
     torch.save(state, filename)
@@ -41,6 +42,27 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+def get_balanced_accuracy(output, target, topk=1):
+    _, predictions = output.topk(topk, 1, True, True)
+    predictions = predictions.data.cpu().numpy()
+    labels = target.cpu().numpy()[:, np.newaxis]
+    
+    precisions = []
+    recalls = []
+    for i in range(0, config.num_classes):
+        tp = np.sum(np.logical_and(
+            np.equal(labels, i), np.equal(predictions, i)
+        ).astype(np.int32))
+        fp = np.sum(np.logical_and(
+            np.logical_not(np.equal(labels, i)), np.equal(predictions, i)
+        ).astype(np.int32))
+        fn = np.sum(np.logical_and(
+            np.equal(labels, i), np.logical_not(np.equal(predictions, i))
+        ).astype(np.int32))
+        precisions = precisions + [100.0*tp/(tp+fp+1e-6)]
+        recalls = recalls + [100.0*tp/(tp+fn+1e-6)]
+    return np.mean(recalls), np.mean(precisions)
 
 
 # def time_to_str(t, mode='min'):

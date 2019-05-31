@@ -7,8 +7,8 @@ from PIL import Image
 
 def split_csv(file):
     data = []
-    a_train_file = r'/mnt/storage/lupeng/ISIC/train.csv'
-    a_test_file = r'/mnt/storage/lupeng/ISIC/test.csv'
+    a_train_file = r'/home/huangyinyue/ISIC_2019/train.csv'
+    a_test_file = r'/home/huangyinyue/ISIC_2019/test.csv'
 
     seed = 3
     np.random.seed(seed)
@@ -16,8 +16,8 @@ def split_csv(file):
     test_indices = np.array(list(set(range(25331)) - set(train_indices)))
     # test_indices = np.random.choice(len(residue), 30, replace=False)  # 如果训练集和测试集综合的数据加起来就是一整个数据集则不需要这个操作
 
-    with open(file)as afile:
-        a_reader = csv.reader(afile)  # 从原始数据集中将所有数据读取出来并保存到a_reader中
+    with open(file)as file:
+        a_reader = csv.reader(file)  # 从原始数据集中将所有数据读取出来并保存到a_reader中
         labels = next(a_reader)  # 提取第一行设置为labels
         for row in a_reader:  # 将a_reader中每一行的数据提取出来并保存到data的列表中
             data.append(row)
@@ -78,5 +78,18 @@ class ISICDataset(Dataset):
         return image,target
 
 
-if __name__ == '__main__':
-    split_csv(file=r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
+
+# label = pd.read_csv(r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
+# print(label)
+
+# train_data = ISICDataset(csv_file=r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv",root_dir='/mnt/storage/lupeng/ISIC/ISIC_2019_Training_Input/')
+# train_loader = DataLoader(dataset=train_data,batch_size=32,shuffle=True)
+# for batch_x, batch_y in train_loader:
+#     print(batch_x)
+#     print(batch_x)
+
+
+# image = read_labels_csv(r"/mnt/storage/lupeng/ISIC/ISIC_2019_Training_GroundTruth.csv")
+# print(image)
+
+# split_csv(file=r"/home/huangyinyue/ISIC_2019/ISIC_2019_Training_GroundTruth.csv")

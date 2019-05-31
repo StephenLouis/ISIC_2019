@@ -4,9 +4,9 @@ class DefaultConfigs(object):
     # val_csv_path = r'/mnt/storage/lupeng/ISIC/test.csv'
     # image_path = r'/mnt/storage/lupeng/ISIC/ISIC_2019_Training_Input/'
 
-    train_csv_path = r"/home/liangxiaoqing/downloads/ISIC_2019_Training_Input/train.csv"
-    val_csv_path = r'/home/liangxiaoqing/downloads/ISIC_2019_Training_Input/test.csv'
-    image_path = r'/home/liangxiaoqing/downloads/ISIC_2019_Training_Input'
+    train_csv_path = r"/home/huangyinyue/ISIC_2019_Training_Input/train.csv"
+    val_csv_path = r'/home/huangyinyue/ISIC_2019_Training_Input/test.csv'
+    image_path = r'/home/huangyinyue/ISIC_2019_Training_Input'
 
     model_name = "resnet50"
     checkpoint_save = './checkpoint.pth.tar'
@@ -16,7 +16,7 @@ class DefaultConfigs(object):
     resume_path = r'./best_model.pth.tar'
 
 
-    gpus = [1,2,5]
+    gpus = [0,1,2,3,4,5,6,7]
 
     #2.numeric parameters
     gamma = 0.1

@@ -151,7 +151,8 @@ def train(train_loader, model, criterion, optimizer):
         loss = criterion(outputs, targets)
 
         # measure accuracy and record loss
-        prec1 = accuracy(outputs.data, targets.data, topk=(1,))
+        #prec1 = accuracy(outputs.data, targets.data, topk=(1,))
+        prec1 = get_balanced_accuracy(outputs.data, targets.data, topk=1)
         losses.update(loss.item(), inputs.size(0))
         top1.update(prec1[0], inputs.size(0))
 
@@ -195,7 +196,8 @@ def validate(val_loader, model, criterion):
         loss = criterion(outputs, targets)
 
         # measure accuracy and record loss
-        prec1 = accuracy(outputs.data, targets.data, topk=(1,))
+        #prec1 = accuracy(outputs.data, targets.data, topk=(1,))
+        prec1 = get_balanced_accuracy(outputs.data, targets.data, topk=1)
         losses.update(loss.item(), inputs.size(0))
         top1.update(prec1[0], inputs.size(0))
 
