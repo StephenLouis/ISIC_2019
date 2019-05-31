@@ -50,7 +50,7 @@ def get_balanced_accuracy(output, target, topk=1):
     
     precisions = []
     recalls = []
-    for i in range(0, config.num_classes):
+    for i in range(0, config.num_classes+1):
         tp = np.sum(np.logical_and(
             np.equal(labels, i), np.equal(predictions, i)
         ).astype(np.int32))
