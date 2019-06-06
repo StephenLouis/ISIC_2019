@@ -48,8 +48,9 @@ def get_balanced_accuracy(output, target, topk=1):
     predictions = predictions.data.cpu().numpy()
     labels = target.cpu().numpy()[:, np.newaxis]
     
-    precisions = []
-    recalls = []
+    tp_list = []
+    fp_list = []
+    fn_list = []
     for i in range(0, config.num_classes):
         tp = np.sum(np.logical_and(
             np.equal(labels, i), np.equal(predictions, i)
@@ -60,9 +61,12 @@ def get_balanced_accuracy(output, target, topk=1):
         fn = np.sum(np.logical_and(
             np.equal(labels, i), np.logical_not(np.equal(predictions, i))
         ).astype(np.int32))
-        precisions = precisions + [100.0*tp/(tp+fp+1e-6)]
-        recalls = recalls + [100.0*tp/(tp+fn+1e-6)]
-    return np.mean(recalls), np.mean(precisions)
+        #precisions = precisions + [100.0*tp/(tp+fp+1e-6)]
+        #recalls = recalls + [100.0*tp/(tp+fn+1e-6)]
+        tp_list = tp_list + [tp]
+        fp_list = fp_list + [fp]
+        fn_list = fn_list + [fn]
+    return tp_list, fn_list
 
 
 # def time_to_str(t, mode='min'):

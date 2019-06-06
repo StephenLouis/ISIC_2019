@@ -79,9 +79,9 @@ def main():
             checkpoint = torch.load(config.resume_path)
             config.start_epoch = checkpoint['epoch']
             best_acc = checkpoint['best_acc']
-            if config.gpus is not None:
+            #if config.gpus is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
-                best_acc = best_acc.to(config.gpus[0])
+            #   best_acc = best_acc.to(config.gpus[0])
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
@@ -132,9 +132,10 @@ def train(train_loader, model, criterion, optimizer):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    top1 = AverageMeter()
+    #top1 = AverageMeter()
     end = time.time()
-
+    tp_sum = [0 for i in range(config.num_classes)]
+    fn_sum = [0 for i in range(config.num_classes)]
 
     for i, (inputs, targets) in enumerate(tqdm(train_loader)):
         # measure data loading time
@@ -154,7 +155,11 @@ def train(train_loader, model, criterion, optimizer):
         #prec1 = accuracy(outputs.data, targets.data, topk=(1,))
         prec1 = get_balanced_accuracy(outputs.data, targets.data, topk=1)
         losses.update(loss.item(), inputs.size(0))
-        top1.update(prec1[0], inputs.size(0))
+        #top1.update(prec1[0], inputs.size(0))
+        
+        tp_sum = [tp_sum[i]+prec1[0][i] for i in range(config.num_classes)]
+        fn_sum = [fn_sum[i]+prec1[1][i] for i in range(config.num_classes)]
+
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -165,7 +170,15 @@ def train(train_loader, model, criterion, optimizer):
         batch_time.update(time.time() - end)
         end = time.time()
 
-    return (losses.avg, top1.avg)
+    recall = [100.0 * tp_sum[i] / (tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
+    gt_sum = [(tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
+    mean_class_recall = np.mean(recall)
+    print(recall)
+    print(tp_sum)
+    print(fn_sum)
+    print(gt_sum)
+    print("******************")   
+    return (losses.avg, mean_class_recall)
 
 
 
@@ -175,8 +188,10 @@ def validate(val_loader, model, criterion):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    top1 = AverageMeter()
-
+    #top1 = AverageMeter()
+    tp_sum = [0 for i in range(config.num_classes)]
+    fn_sum = [0 for i in range(config.num_classes)]
+    
     # switch to evaluate mode
     model.eval()
 
@@ -198,14 +213,26 @@ def validate(val_loader, model, criterion):
         # measure accuracy and record loss
         #prec1 = accuracy(outputs.data, targets.data, topk=(1,))
         prec1 = get_balanced_accuracy(outputs.data, targets.data, topk=1)
+
         losses.update(loss.item(), inputs.size(0))
-        top1.update(prec1[0], inputs.size(0))
+        #top1.update(prec1[0], inputs.size(0))
+        tp_sum = [tp_sum[i]+prec1[0][i] for i in range(config.num_classes)]
+        fn_sum = [fn_sum[i]+prec1[1][i] for i in range(config.num_classes)]
+
 
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
 
-    return (losses.avg, top1.avg)
+    recall = [100.0 * tp_sum[i] / (tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
+    gt_sum = [(tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
+    mean_class_recall = np.mean(recall)
+    print(recall)
+    print(tp_sum)
+    print(fn_sum)
+    print(gt_sum)
+    print("******************")    
+    return (losses.avg, mean_class_recall)
 
 
 
