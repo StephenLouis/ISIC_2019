@@ -23,10 +23,10 @@ from cnn_finetune import make_model
 #os.environ["CUDA_VISIBLE_DEVICES"] = config.gpus
 warnings.filterwarnings('ignore')
 
-best_acc = 0  # best test accuracy
+best_Mrecall = 0  # best test accuracy
 
 def main():
-    global best_acc
+    global best_Mrecall
     writer = SummaryWriter()
     # load dataset
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -66,7 +66,7 @@ def main():
     cudnn.benchmark = True
 
     # define loss function (criterion) and optimizer
-    optimizer = optim.SGD(model.parameters(),lr = config.lr,momentum=config.momentum,weight_decay=config.weight_decay)
+    optimizer = optim.Adam(model.parameters(),lr = config.lr,weight_decay=config.weight_decay)
     criterion = nn.CrossEntropyLoss().cuda()
 
     # some parameters restart model
@@ -95,10 +95,10 @@ def main():
         # get Learning_rate
         Learning_rate = optimizer.state_dict()['param_groups'][0]['lr']
         print("EPOCH: %i" % epoch)
-        train_loss, train_acc = train(train_dataloader, model, criterion, optimizer)
-        print("EPOCH: %i   Tranin_ACC:%f  Train_LOSS:%f  lr:%f" % (epoch, train_acc, train_loss,Learning_rate))
-        val_loss, val_acc = validate(val_dataloader, model, criterion)
-        print("EPOCH: %i   Val_ACC:%f  Val_LOSS:%f" % (epoch, val_acc, val_loss))
+        train_loss, train_Mrecall = train(train_dataloader, model, criterion, optimizer)
+        print("EPOCH: %i   Tranin_mean_recall:%f  Train_LOSS:%f  lr:%f" % (epoch, train_Mrecall, train_loss,Learning_rate))
+        val_loss, val_Mrecall = validate(val_dataloader, model, criterion)
+        print("EPOCH: %i   Val_mean_recall:%f  Val_LOSS:%f" % (epoch, val_Mrecall, val_loss))
 
         ####  ！！！！！！此处需调整
         if epoch >= 140:
@@ -107,12 +107,12 @@ def main():
                 param_group['lr'] = Learning_rate
 
         # save model
-        is_best = val_acc > best_acc
-        best_acc = max(val_acc, best_acc)
+        is_best = val_Mrecall > best_Mrecall
+        best_acc = max(val_Mrecall, best_acc)
         save_checkpoint({
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
-            'acc': val_acc,
+            'acc': val_Mrecall,
             'best_acc': best_acc,
             'optimizer': optimizer.state_dict(),
         }, is_best)
@@ -120,8 +120,8 @@ def main():
         #   使用tensorboard
         writer.add_scalars('Loss', {'train': train_loss,
                                     'valid': val_loss}, epoch)
-        writer.add_scalars('Acc', {'train': train_acc,
-                                   'valid': val_acc}, epoch)
+        writer.add_scalars('Acc', {'train': train_Mrecall,
+                                   'valid': val_Mrecall}, epoch)
         writer.add_scalars('lr',{'lr':Learning_rate}, epoch)
 
 
@@ -172,12 +172,12 @@ def train(train_loader, model, criterion, optimizer):
 
     recall = [100.0 * tp_sum[i] / (tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
     gt_sum = [(tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
-    mean_class_recall = np.mean(recall)
-    print(recall)
-    print(tp_sum)
-    print(fn_sum)
-    print(gt_sum)
-    print("******************")   
+    mean_class_recall = float(np.mean(recall))
+    # print(recall)
+    # print(tp_sum)
+    # print(fn_sum)
+    # print(gt_sum)
+    # print("******************")
     return (losses.avg, mean_class_recall)
 
 
@@ -226,12 +226,12 @@ def validate(val_loader, model, criterion):
 
     recall = [100.0 * tp_sum[i] / (tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
     gt_sum = [(tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
-    mean_class_recall = np.mean(recall)
-    print(recall)
-    print(tp_sum)
-    print(fn_sum)
-    print(gt_sum)
-    print("******************")    
+    mean_class_recall = float(np.mean(recall))
+    # print(recall)
+    # print(tp_sum)
+    # print(fn_sum)
+    # print(gt_sum)
+    # print("******************")
     return (losses.avg, mean_class_recall)
 
 

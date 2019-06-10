@@ -3,6 +3,7 @@ import torch
 import os
 from config import config
 import numpy as np
+from sklearn.metrics import classification_report
 
 def save_checkpoint(state, is_best, filename=config.checkpoint_save):
     torch.save(state, filename)
@@ -41,13 +42,14 @@ def accuracy(output, target, topk=(1,)):
         for k in topk:
             correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
-        return res
+        return res,pred
+
 
 def get_balanced_accuracy(output, target, topk=1):
     _, predictions = output.topk(topk, 1, True, True)
     predictions = predictions.data.cpu().numpy()
     labels = target.cpu().numpy()[:, np.newaxis]
-    
+
     tp_list = []
     fp_list = []
     fn_list = []
@@ -61,35 +63,41 @@ def get_balanced_accuracy(output, target, topk=1):
         fn = np.sum(np.logical_and(
             np.equal(labels, i), np.logical_not(np.equal(predictions, i))
         ).astype(np.int32))
-        #precisions = precisions + [100.0*tp/(tp+fp+1e-6)]
-        #recalls = recalls + [100.0*tp/(tp+fn+1e-6)]
+
         tp_list = tp_list + [tp]
         fp_list = fp_list + [fp]
         fn_list = fn_list + [fn]
     return tp_list, fn_list
 
 
-# def time_to_str(t, mode='min'):
-#     if mode=='min':
-#         t  = int(t)/60
-#         hr = t//60
-#         min = t%60
-#         return '%2d hr %02d min'%(hr,min)
-#
-#     elif mode=='sec':
-#         t   = int(t)
-#         min = t//60
-#         sec = t%60
-#         return '%2d min %02d sec'%(min,sec)
-#
+# def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_size):
+#     if epoch < 8:
+#         lr = 2e-4 + (config.lr-2e-4) * iteration / (epoch_size * 7)
 #     else:
-#         raise NotImplementedError
+#         lr = config.lr * (gamma ** (step_index))
+#     for param_group in optimizer.param_groups:
+#         param_group['lr'] = lr
+#     return lr
 
-def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_size):
-    if epoch < 8:
-        lr = 2e-4 + (config.lr-2e-4) * iteration / (epoch_size * 7)
-    else:
-        lr = config.lr * (gamma ** (step_index))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-    return lr
+# def adjust_learning_rate(optimizer, gamma, epoch, step_index, iteration, epoch_size):
+#     if epoch > 50:
+#         lr = config.lr * 0.2
+#     else:
+#         lr = config.lr * (gamma ** (step_index))
+#
+#     for param_group in optimizer.param_groups:
+#         param_group['lr'] = lr
+#     return lr
+
+
+
+
+
+
+def plot_classification_report(y_true,y_pred,acc,mean_class_recall,save_path):
+    target_names = ['MEL','NV','BCC','AK','BKL','DF','VASC','SCC','unk']
+    
+    with open(save_path,mode='a') as f:
+        f.write(classification_report(y_true, y_pred,target_names=target_names))
+        f.write("ACC: %f" % (acc))
+        f.write("mean_class_recall: %f"%(mean_class_recall))
