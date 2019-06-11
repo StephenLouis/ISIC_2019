@@ -13,6 +13,7 @@ from utils.utils import *
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from cnn_finetune import make_model
+from sklearn.utils import class_weight
 
 
 #1. set random.seed and cudnn performance
@@ -55,7 +56,7 @@ def main():
     #   create model
     print("=====> Loading model..")
     
-    model = make_model('se_resnext50_32x4d', num_classes=config.num_classes+1, pretrained=True)
+    model = make_model('se_resnext50_32x4d', num_classes=config.num_classes, pretrained=True)
 
     # model = resnet50(pretrained=True)
     # model.fc = torch.nn.Linear(2048,config.num_classes+1)
@@ -65,9 +66,15 @@ def main():
 
     cudnn.benchmark = True
 
+    # classes = [0,1,2,3,4,5,6,7]
+    # list = np.loadtxt('./lable.txt')
+    # class_weights = class_weight.compute_class_weight('balanced',classes,list)
+
+
     # define loss function (criterion) and optimizer
     optimizer = optim.Adam(model.parameters(),lr = config.lr,weight_decay=config.weight_decay)
-    criterion = nn.CrossEntropyLoss().cuda()
+    # criterion = nn.CrossEntropyLoss(weight=torch.cuda.FloatTensor(class_weights.astype(np.float32))).cuda(device=config.gpus[0])
+    criterion = nn.CrossEntropyLoss().cuda(device=config.gpus[0])
 
     # some parameters restart model
     resume = config.resume
@@ -78,7 +85,7 @@ def main():
             print("=> loading checkpoint '{}'".format(config.resume_path))
             checkpoint = torch.load(config.resume_path)
             config.start_epoch = checkpoint['epoch']
-            best_acc = checkpoint['best_acc']
+            best_Mrecall = checkpoint['best_Mrecall']
             #if config.gpus is not None:
                 # best_acc1 may be from a checkpoint from a different GPU
             #   best_acc = best_acc.to(config.gpus[0])
@@ -101,19 +108,22 @@ def main():
         print("EPOCH: %i   Val_mean_recall:%f  Val_LOSS:%f" % (epoch, val_Mrecall, val_loss))
 
         ####  ！！！！！！此处需调整
-        if epoch >= 140:
-            Learning_rate = config.lr * 1.0 / 10
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = Learning_rate
+        # if epoch >= 140:
+        #     Learning_rate = config.lr * 1.0 / 10
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = Learning_rate
+        adjust_learning_rate(optimizer,epoch)
+
+
 
         # save model
         is_best = val_Mrecall > best_Mrecall
-        best_acc = max(val_Mrecall, best_acc)
+        best_Mrecall = max(val_Mrecall, best_Mrecall)
         save_checkpoint({
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'acc': val_Mrecall,
-            'best_acc': best_acc,
+            'best_acc': best_Mrecall,
             'optimizer': optimizer.state_dict(),
         }, is_best)
 
