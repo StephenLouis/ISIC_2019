@@ -22,5 +22,6 @@
 
 ## 用法说明
 **第一阶段**：比赛方共提供25332张图片，和相应标签文件（CSV文件）。**由于没有给测试集**，我们需手动将所给数据划分为训练集和验证集。  
-1. 运行Data_oader.py中split_csv的函数（自行修改path），生成tran.csv和val.csv。  
-2. 运行main.py即可进行训练。（自行修改超参数）
+1. 运行Data_Loader.py中split_csv的函数（自行修改path），生成tran.csv和val.csv。
+2. 修改config的路径、gpu、batch_size等参数
+3. 运行main.py即可进行训练。（自行修改超参数）

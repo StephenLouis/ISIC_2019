@@ -107,12 +107,12 @@ def main():
         val_loss, val_Mrecall = validate(val_dataloader, model, criterion)
         print("EPOCH: %i   Val_mean_recall:%f  Val_LOSS:%f" % (epoch, val_Mrecall, val_loss))
 
-        ####  ！！！！！！此处需调整
-        # if epoch >= 140:
-        #     Learning_rate = config.lr * 1.0 / 10
-        #     for param_group in optimizer.param_groups:
-        #         param_group['lr'] = Learning_rate
-        adjust_learning_rate(optimizer,epoch)
+        ###  ！！！！！！此处需调整
+        if epoch >= 140:
+            Learning_rate = config.lr * 1.0 / 10
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = Learning_rate
+        # adjust_learning_rate(optimizer,epoch)
 
 
 
@@ -123,7 +123,7 @@ def main():
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'acc': val_Mrecall,
-            'best_acc': best_Mrecall,
+            'best_Mrecall': best_Mrecall,
             'optimizer': optimizer.state_dict(),
         }, is_best)
 
@@ -237,6 +237,7 @@ def validate(val_loader, model, criterion):
     recall = [100.0 * tp_sum[i] / (tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
     gt_sum = [(tp_sum[i] + fn_sum[i]) for i in range(config.num_classes)]
     mean_class_recall = float(np.mean(recall))
+    save_best_mean_recall(mean_class_recall,recall)
     # print(recall)
     # print(tp_sum)
     # print(fn_sum)
@@ -244,6 +245,26 @@ def validate(val_loader, model, criterion):
     # print("******************")
     return (losses.avg, mean_class_recall)
 
+def save_best_mean_recall(mean_class_recall,recall):
+    best_mean_recall_path = r'./best_mean_recall.txt'
+    init_dict = {'mean_class_recall':0,
+                 'recall':[]}
+    if(os.path.exists(best_mean_recall_path) == False):
+        file = open(best_mean_recall_path,'w')
+        file.write(str(init_dict))
+        file.close()
+        
+    file = open(best_mean_recall_path,'r')   
+    dic = eval(file.read())
+    file.close()
+    if(mean_class_recall > dic['mean_class_recall']):
+        dic['mean_class_recall'] = mean_class_recall
+        dic['recall'] = recall
+        file = open(best_mean_recall_path,'r+')
+        file.truncate()
+        file.write(str(dic))
+        file.close()
+        print("save new mean_class_recall")
 
 
 
